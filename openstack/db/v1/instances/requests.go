@@ -49,22 +49,22 @@ func (opts NetworkOpts) ToMap() (map[string]interface{}, error) {
 type CreateOpts struct {
 	// Either the integer UUID (in string form) of the flavor, or its URI
 	// reference as specified in the response from the List() call. Required.
-	FlavorRef string
+	FlavorRef string `json:"flavor_ref" required:"true"`
 	// Specifies the volume size in gigabytes (GB). The value must be between 1
 	// and 300. Required.
-	Size int
+	Size int `json:"size" required:"true"`
 	// Name of the instance to create. The length of the name is limited to
 	// 255 characters and any characters are permitted. Optional.
-	Name string
+	Name string `json:"name" required:"true"`
 	// A slice of database information options.
-	Databases db.CreateOptsBuilder
+	Databases db.CreateOptsBuilder `json:"database"`
 	// A slice of user information options.
-	Users users.CreateOptsBuilder
+	Users users.CreateOptsBuilder `json:"user"`
 	// Options to configure the type of datastore the instance will use. This is
 	// optional, and if excluded will default to MySQL.
-	Datastore *DatastoreOpts
+	Datastore *DatastoreOpts `json:"datastore" required:"true"`
 	// Networks dictates how this server will be attached to available networks.
-	Networks []NetworkOpts
+	Networks []NetworkOpts `json:"networks"`
 }
 
 // ToInstanceCreateMap will render a JSON map.
