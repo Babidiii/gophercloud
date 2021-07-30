@@ -45,6 +45,17 @@ func (opts NetworkOpts) ToMap() (map[string]interface{}, error) {
 	return gophercloud.BuildRequestBody(opts, "")
 }
 
+// AccessOpts structure for access parameters in order to enable public access and allowed cidrs
+type AccessOpts struct {
+	IsPublic     bool     `json:"is_public"`
+	AllowedCidrs []string `json:"allowed_cirdrs"`
+}
+
+// ToMap converts an AccessOpt to a map[string]string (for a request body)
+func (opts AccessOpts) ToMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts, "")
+}
+
 // CreateOpts is the struct responsible for configuring a new database instance.
 type CreateOpts struct {
 	// Either the integer UUID (in string form) of the flavor, or its URI
@@ -65,6 +76,8 @@ type CreateOpts struct {
 	Datastore *DatastoreOpts `json:"datastore" required:"true"`
 	// Networks dictates how this server will be attached to available networks.
 	Networks []NetworkOpts `json:"networks"`
+	// Access Define how the database is exposed
+	Access *AccessOpts `json:"access"`
 }
 
 // ToInstanceCreateMap will render a JSON map.
@@ -121,6 +134,15 @@ func (opts CreateOpts) ToInstanceCreateMap() (map[string]interface{}, error) {
 			}
 		}
 		instance["nics"] = networks
+	}
+
+	// Add access parameter (enable public instance or not, set list of available cidrs)
+	if opts.Access != nil {
+		access, err := opts.Access.ToMap()
+		if err != nil {
+			return nil, err
+		}
+		instance["access"] = access
 	}
 
 	return map[string]interface{}{"instance": instance}, nil
