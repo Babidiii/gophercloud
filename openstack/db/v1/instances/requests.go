@@ -56,6 +56,16 @@ func (opts AccessOpts) ToMap() (map[string]interface{}, error) {
 	return gophercloud.BuildRequestBody(opts, "")
 }
 
+// RestoreOpts for instance creation from exisiting backup
+type RestoreOpts struct {
+	BackupRef string `json:"backup_ref"`
+}
+
+// ToMap converts an RestoreOpts to a map[string]string (for a request body)
+func (opts RestoreOpts) ToMap() (map[string]interface{}, error) {
+	return gophercloud.BuildRequestBody(opts, "")
+}
+
 // CreateOpts is the struct responsible for configuring a new database instance.
 type CreateOpts struct {
 	// Either the integer UUID (in string form) of the flavor, or its URI
@@ -78,6 +88,8 @@ type CreateOpts struct {
 	Networks []NetworkOpts `json:"networks"`
 	// Access Define how the database is exposed
 	Access *AccessOpts `json:"access"`
+	// Create an instance from a backup
+	RestorePoint *RestoreOpts `json:"restore_point"`
 }
 
 // ToInstanceCreateMap will render a JSON map.
@@ -143,6 +155,16 @@ func (opts CreateOpts) ToInstanceCreateMap() (map[string]interface{}, error) {
 			return nil, err
 		}
 		instance["access"] = access
+	}
+
+	// If the instance to create is a restoration of another one
+	if opts.RestorePoint != nil {
+		if opts.RestorePoint.BackupRef == "" {
+			return nil, gophercloud.ErrMissingInput{Argument: "restore_point.backup_ref"}
+		}
+		instance["RestorePoint"] = map[string]interface{}{
+			"backup_ref": opts.RestorePoint.BackupRef,
+		}
 	}
 
 	return map[string]interface{}{"instance": instance}, nil
