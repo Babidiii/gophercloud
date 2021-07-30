@@ -230,3 +230,8 @@ type IsRootEnabledResult struct {
 func (r IsRootEnabledResult) Extract() (bool, error) {
 	return r.Body.(map[string]interface{})["rootEnabled"] == true, r.Err
 }
+
+// DetachReplicaResult represents the result of DetachReplica requests.
+type DetachReplicaResult struct {
+	gophercloud.ErrResult
+}

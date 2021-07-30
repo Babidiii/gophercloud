@@ -90,6 +90,11 @@ type CreateOpts struct {
 	Access *AccessOpts `json:"access"`
 	// Create an instance from a backup
 	RestorePoint *RestoreOpts `json:"restore_point"`
+	// ReplicaOf is the Id or name of an existing instance to replicate from
+	ReplicaOf string `json:"replica_of"`
+	// ReplicaCount is a the number of replica to create
+	// if not provided and replicaOf set it will be 1 by default
+	ReplicaCount int `json:"replica_count"`
 }
 
 // ToInstanceCreateMap will render a JSON map.
@@ -165,6 +170,16 @@ func (opts CreateOpts) ToInstanceCreateMap() (map[string]interface{}, error) {
 		instance["RestorePoint"] = map[string]interface{}{
 			"backup_ref": opts.RestorePoint.BackupRef,
 		}
+	}
+
+	// The database instance from which the instance must replicate the data
+	if opts.ReplicaOf != "" {
+		instance["replica_of"] = opts.ReplicaOf
+	}
+
+	// Default to 1 if not provided to the API so check for value over 1 otherwise no need to set the field
+	if opts.ReplicaCount > 1 {
+		instance["replica_count"] = opts.ReplicaCount
 	}
 
 	return map[string]interface{}{"instance": instance}, nil
@@ -267,6 +282,14 @@ func AttachConfigurationGroup(client *gophercloud.ServiceClient, instanceID stri
 // DetachConfigurationGroup will dettach configuration group from the instance
 func DetachConfigurationGroup(client *gophercloud.ServiceClient, instanceID string) (r ConfigurationResult) {
 	b := map[string]interface{}{"instance": map[string]interface{}{}}
+	resp, err := client.Put(resourceURL(client, instanceID), &b, nil, &gophercloud.RequestOpts{OkCodes: []int{202}})
+	_, r.Header, r.Err = gophercloud.ParseResponse(resp, err)
+	return
+}
+
+// DetachReplica will detach replica from its replication source
+func DetachReplica(client *gophercloud.ServiceClient, instanceID string, replicaOf string) (r DetachReplicaResult) {
+	b := map[string]interface{}{"instance": map[string]string{"replica_of": replicaOf}}
 	resp, err := client.Put(resourceURL(client, instanceID), &b, nil, &gophercloud.RequestOpts{OkCodes: []int{202}})
 	_, r.Header, r.Err = gophercloud.ParseResponse(resp, err)
 	return
