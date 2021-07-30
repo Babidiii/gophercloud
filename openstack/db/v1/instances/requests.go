@@ -95,6 +95,8 @@ type CreateOpts struct {
 	// ReplicaCount is a the number of replica to create
 	// if not provided and replicaOf set it will be 1 by default
 	ReplicaCount int `json:"replica_count"`
+	// Configuration group id that you want to attach to the instance.
+	Configuration string `json:"configuration"`
 }
 
 // ToInstanceCreateMap will render a JSON map.
@@ -152,7 +154,6 @@ func (opts CreateOpts) ToInstanceCreateMap() (map[string]interface{}, error) {
 		}
 		instance["nics"] = networks
 	}
-
 	// Add access parameter (enable public instance or not, set list of available cidrs)
 	if opts.Access != nil {
 		access, err := opts.Access.ToMap()
@@ -161,7 +162,6 @@ func (opts CreateOpts) ToInstanceCreateMap() (map[string]interface{}, error) {
 		}
 		instance["access"] = access
 	}
-
 	// If the instance to create is a restoration of another one
 	if opts.RestorePoint != nil {
 		if opts.RestorePoint.BackupRef == "" {
@@ -171,15 +171,16 @@ func (opts CreateOpts) ToInstanceCreateMap() (map[string]interface{}, error) {
 			"backup_ref": opts.RestorePoint.BackupRef,
 		}
 	}
-
 	// The database instance from which the instance must replicate the data
 	if opts.ReplicaOf != "" {
 		instance["replica_of"] = opts.ReplicaOf
 	}
-
 	// Default to 1 if not provided to the API so check for value over 1 otherwise no need to set the field
 	if opts.ReplicaCount > 1 {
 		instance["replica_count"] = opts.ReplicaCount
+	}
+	if opts.Configuration != "" {
+		instance["configuration"] = opts.Configuration
 	}
 
 	return map[string]interface{}{"instance": instance}, nil
